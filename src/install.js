@@ -1,35 +1,21 @@
-export default (Vue, store) => {
-  let store = store || null
+import vuex from 'vuex'
+import { injectStore } from './store'
+import { injectComputed } from './computed'
+import { injectMethods } from './methods'
+
+export default (Vue) => {
+  Vue.use(vuex)
   function beforeCreate() {
     const vm = this
 
-    // inject $store
-    const options = vm.$options
-    if (options.store) {
-      vm.$store = (typeof options.store === 'function'
-        ? options.store()
-        : options.store
-      ) || store
-    } else if (options.parent && options.parent.$store) {
-      vm.$store = options.parent.$store
-    } else if (store) {
-      vm.$store = store
-    }
-  }
+    injectStore(vm)
 
-  function created() {
-    const vm = this
-  }
+    injectComputed(vm)
 
-  function beforeDestroy() {
-    const vm = this
+    injectMethods(vm)
+    
   }
-
   Vue.mixin({
-    beforeCreate,
-    created,
-    beforeDestroy
+    beforeCreate
   })
 }
-
-function 
