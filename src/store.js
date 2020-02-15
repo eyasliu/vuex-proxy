@@ -2,18 +2,52 @@ import vuex from 'vuex'
 import { get } from './helper'
 
 class StoreProxy{
-  constructor(store, proxyRoot) {
+  constructor(path, store, proxyRoot) {
+    this.$path = path
     this.$store = store
     if (!proxyRoot) {
-      this.$s = this
+      this.$root = this
     } else {
-      this.$s = proxyRoot
+      this.$root = proxyRoot
     }
+  }
+  get $state() {
+    return this.$path.split('.').reduce((s, k) => {
+      if (k === 'root') {
+        return s
+      } else {
+        return s[k]
+      }
+    }, this.$store.state)
+  }
+  $registerModule(name, rawModule) {
+    this.$store.registerModule(name, rawModule)
+    const path = this.$path + '.' + name
+    const mod = path.split('.').reduce((s, key) => {
+      if (!s) {
+        return undefined
+      }
+      const m = s[key] || s._children[key]
+      if (m) {
+        return m
+      }
+      return undefined
+    }, this.$store._modules)
+    this[name] = new StoreProxy(this.$path + '.' + name, this.$store, this.$root)
+    proxyModule(this[name], mod, this.$store)
+  }
+  $unregisterModule(name) {
+    this.$store.unregisterModule(name)
+    delete this[name]
   }
 }
 
 function createStore(data) {
   data.strict = false
+
+  if (data._vm && data._modules) {
+    return data
+  }
   const store = new vuex.Store(data)
   return store
 }
@@ -23,14 +57,17 @@ function proxyModule(px, mod, store) {
   const proxyMod = (modpx, parent) => {
     Object.keys(parent._children).forEach(key => {
       const storeMod = parent._children[key]
-      const childrenPx = new StoreProxy(store, px)
-      
+      const childrenPx = new StoreProxy(modpx.$path + '.' + key, store, px)
+      if (modpx[key]) {
+        throw new Error('module key has duplicate key [' + key + ']')
+      }
       Object.defineProperty(modpx, key, {
-        // configurable: true,
-        // writable: true,
         enumerable: true,
         get() {
           return childrenPx
+        },
+        set() {
+          throw new Error('[vuexp] cannot set module state')
         }
       })
       proxyMod(childrenPx, storeMod)
@@ -47,10 +84,14 @@ function proxyModule(px, mod, store) {
         Object.defineProperty(modpx, stateKey, {
           enumerable: true,
           get() {
-            return parent.state[stateKey]
+            return modpx.$state[stateKey]
           },
           set(v) {
-            return parent.state[stateKey] = v
+            modpx.$store._withCommit(() => {
+              modpx.$state[stateKey] = v
+            })
+            modpx.$store._subscribers.forEach(function (sub) { return sub({ type: 'VUEXP_CHANGE_STATE', payload: v}, modpx.$state)})
+            return modpx.$state[stateKey]
           }
         })
       }
@@ -66,7 +107,7 @@ function proxyModule(px, mod, store) {
       if (i < lastIndex) {
         return modpx[k]
       }
-      if (i == lastIndex) {
+      if (i == lastIndex && typeof modpx[k] === 'undefined') {
         Object.defineProperty(modpx, k, {
           enumerable: true,
           get() {
@@ -77,7 +118,7 @@ function proxyModule(px, mod, store) {
           }
         })
       }
-    }, px)
+    }, px.$root)
   })
 
   // actions
@@ -121,7 +162,7 @@ function proxyModule(px, mod, store) {
 }
 
 function createProxy(store) {
-  const px = new StoreProxy(store)
+  const px = new StoreProxy('root', store)
 
   proxyModule(px, store._modules.root, store)
 

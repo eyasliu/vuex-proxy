@@ -1,11 +1,11 @@
 {
-  "name": "vue-p",
-  "version": "1.0.2",
+  "name": "vuex-p",
+  "version": "1.0.0",
   "author": "Eyasliu <liuyuesongde@163.com>",
   "license": "Apache-2.0",
-  "main": "src/index.js",
-  "module": "src/index.js",
-  "unpkg": "src/index.js",
+  "main": "dist/vuex-p.js",
+  "module": "dist/vuex-p.js",
+  "unpkg": "dist/vuex-p.js",
   "scripts": {
     "compile": "rm -rf lib",
     "build": "npm run compile && rm -rf dist && rollup -c",
@@ -13,20 +13,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eyasliu/movx.git"
+    "url": "git+https://github.com/eyasliu/vuex-p.git"
   },
   "keywords": [
-    "mobx",
     "vue",
     "vuex",
-    "mobx-vue",
-    "vue-mobx",
-    "movx"
+    "vuex plus",
+    "vue plus"
   ],
   "bugs": {
-    "url": "https://github.com/eyasliu/movx/issues"
+    "url": "https://github.com/eyasliu/vuex-p/issues"
   },
-  "homepage": "https://github.com/eyasliu/movx#readme",
+  "homepage": "https://github.com/eyasliu/vuex-p#readme",
   "files": [
     "src/",
     "dist/"
@@ -47,7 +45,7 @@
     "vuex": "^3.1.2"
   },
   "peerDependencies": {
-    "vue": "^2.4.2"
+    "vuex": "^2.0.0"
   },
   "dependencies": {}
 }

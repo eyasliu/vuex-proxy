@@ -4,4 +4,4 @@ export default {
   install
 }
 
-export { computed, methods } from './api'
+// export { computed, methods } from './api'

@@ -75,11 +75,13 @@ function createComputed(vm, comp) {
             setter: v.set ? (nextVal) => v.set.call(vm, nextVal, vm.$s) : null,
           })
         }
+        break;
       default:
         res.push({
           key: key,
           getter: () => v,
         })
+        break;
     }
   })
 
