@@ -1,20 +1,20 @@
-# VUEX-P
+# Vuex Proxy
 
-that mean Vue Plus
+that mean Vuex Proxy
 
 vue 的增强组件，基于 vuex，让 vuex 更简单
 
 # 使用方法
 
-首先，vuex 那整套完全兼容，所以可以从 vuex 无缝迁移到 vuex-p，但是反之不行，因为 vuex-p 在 vuex 的api上有扩展
+首先，vuex 那整套完全兼容，所以可以从 vuex 无缝迁移到 vuex-p，但是反之不行，因为 vuex-proxy 在 vuex 的api上有扩展
 
 ### API
 
-在 vue 组件实例中，增加了一个 `$s` 属性，这是 `vuexp store`，事实上这是一个 `vuex store` 的代理，目的就是为了简化 `vuex` 使用，当然，原本 vuex 注入的 `$store` 依然有效
+在 vue 组件实例中，增加了一个 `$s` 属性，这是 `vuex-proxy store`，事实上这是一个 `vuex store` 的代理，目的就是为了简化 `vuex` 使用，当然，原本 vuex 注入的 `$store` 依然有效
 
 > 注意在定义 store 的 state，actions，getters，mutation 时，不要和这些 api 名字重复了
 
-**vuexp store** 格式
+**vuex-proxy store** 格式
 
 在组件内使用 `this.$s` 访问
 
@@ -24,7 +24,7 @@ vue 的增强组件，基于 vuex，让 vuex 更简单
 
 #### `this.$s.$root`
 
-最顶层 vuexp store 对象
+最顶层 vuex-proxy store 对象
 
 #### `this.$s.$registerModule`
 
@@ -40,24 +40,24 @@ vue 的增强组件，基于 vuex，让 vuex 更简单
 
 #### `this.$s[moduleName]`
 
-模块级别的 vuexp store，api 和根 vuexp store 无区别，只是状态数据不一样
+模块级别的 vuex-proxy store，api 和根 vuex-proxy store 无区别，只是状态数据不一样
 
 #### `this.$s[fieldName]`
 
-fieldName 是指 state，getters，actions，mutation 里面的所有字段名，vuex-p 把所有的状态、计算属性、方法都放到了同一层级里面，当你访问 vuex-p 的数据时，内部是知道你访问的是 state，还是getters，，还是 actions ，是一个 module，所以这也要求 state，getters，actions，mutation 里面的字段不能有重复，如果有重复则在初始化的时候会报错误
+fieldName 是指 state，getters，actions，mutation 里面的所有字段名，vuex-p 把所有的状态、计算属性、方法都放到了同一层级里面，当你访问 vuex-proxy 的数据时，内部是知道你访问的是 state，还是getters，，还是 actions ，是一个 module，所以这也要求 state，getters，actions，mutation 里面的字段不能有重复，如果有重复则在初始化的时候会报错误
 
 
 ### 示例
 
 ```js
 import Vue from 'vue'
-import vuexp from 'vuex-p'
+import vuex-proxy from 'vuex-proxy'
 
 // 使用插件
-Vue.use(vuexp)
+Vue.use(vuex-proxy)
 
 new Vue({
-  // 在根组件使用 store 属性定义 vuexp store，vuexp store 的 api 和 vuex store 完全兼容，说明请看下文
+  // 在根组件使用 store 属性定义 vuex-proxy store，vuexp store 的 api 和 vuex store 完全兼容，说明请看下文
   store: {
     // store state 状态数据，和 vuex state 完全一致，无任何变化
     state: {
@@ -78,8 +78,8 @@ new Vue({
         commit('RESET_NUM')
       }，
       // 第二种 action 写法，增强版本，在组件调用的时候，使用 this.$s.plus()
-      // this 指向 vuexp store
-      // 参数无限个数，可在里面直接更改 state，把它当做 vuex mutation 来用，支持异步，注意异步函数里的 this 是指向的 vuexp store就没问题了
+      // this 指向 vuex-proxy store
+      // 参数无限个数，可在里面直接更改 state，把它当做 vuex mutation 来用，支持异步，注意异步函数里的 this 是指向的 vuex-proxy store就没问题了
       plus() {
         return ++this.num
       },
@@ -130,7 +130,7 @@ new Vue({
   $computed: {
     num: 'num', // 会自动绑定 get 和 set
     xnum: {
-      get($s) { return $s.num } // get 函数只有一个参数，该参数为 vuexp store 实例，也就是 this.$s
+      get($s) { return $s.num } // get 函数只有一个参数，该参数为 vuex-proxy store 实例，也就是 this.$s
       set(n, $s) { return $s.num = n } // set 函数有两个参数，第一个是修改后的值，第二个是 this.$s
     },
     numPlus() { // 这算是 get 函数
@@ -143,7 +143,7 @@ new Vue({
   },
 
   // 绑定 actions 和 mutations 到组件实例中
-  // 字符串数组形式，根据key名字自动映射，映射后函数的this指向为函数所在的层级的 vuexp store 实例
+  // 字符串数组形式，根据key名字自动映射，映射后函数的this指向为函数所在的层级的 vuex-proxy store 实例
   $methods: ['plus', 'setNum'],
   $methods: {
     plus: 'plus',
@@ -170,7 +170,7 @@ new Vue({
 
 #### 兼容性
 
-Vuex 的原有功能一切正常，可以无缝的将 vuex 迁移到 vuexp
+Vuex 的原有功能一切正常，可以无缝的将 vuex 迁移到 vuex-proxy
 
 #### 为什么要改变 vuex
 

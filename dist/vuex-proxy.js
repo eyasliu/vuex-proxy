@@ -1,7 +1,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('vuex')) :
   typeof define === 'function' && define.amd ? define(['vuex'], factory) :
-  (global = global || self, global['vuex-p'] = factory(global.vuex));
+  (global = global || self, global['vuex-proxy'] = factory(global.vuex));
 }(this, (function (vuex) { 'use strict';
 
   vuex = vuex && vuex.hasOwnProperty('default') ? vuex['default'] : vuex;
@@ -403,4 +403,5 @@
   // export { computed, methods } from './api'
 
   return index;
+
 })));
