@@ -3,9 +3,9 @@ import { get, set } from './helper'
 export function injectComputed(vm) {
   if (vm.$options.$computed) {
     vm.$options.computed = createComputed(vm, vm.$options.$computed).reduce((m, {key, getter, setter}) => {
-      if (m[key]) {
-        throw new Error('computed has duplicate key [' + key + ']')
-      }
+      // if (m[key]) {
+      //   throw new Error('computed has duplicate key [' + key + ']')
+      // }
       if (!setter) {
         m[key] = getter
       } else {
