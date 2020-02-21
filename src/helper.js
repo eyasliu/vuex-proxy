@@ -19,12 +19,23 @@ export const get = (obj, key, def, p) => {
 }
 
 export const set = (obj, key, val) => {
-  if (typeof key === 'undefined') throw new Error('required set key')
-  let p = 0;
-  key = key.split ? key.split('.') : key;
-  const endKey = key.pop()
-  while (obj && p < key.length) obj = obj[key[p++]];
-  if (obj !== undefined && p >= key.length && obj[endKey]) {
-    return obj[endKey] = val
+  let p = key.split('.')
+  if (p.length === 1) {
+    return obj[key] = val
   }
+  let end = false
+  return p.reduce((v, k, i) => {
+    if (end) {
+      return val
+    }
+    if (typeof v === 'object' && v) {
+      if (i === (p.length - 1)) {
+        v[k] = val
+        end = true
+        return val
+      } else {
+        return v[k]
+      }
+    }
+  }, obj)
 }

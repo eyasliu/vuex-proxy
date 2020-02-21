@@ -1,10 +1,10 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('vuex')) :
   typeof define === 'function' && define.amd ? define(['vuex'], factory) :
-  (global = global || self, global['vuex-proxy'] = factory(global.vuex));
-}(this, (function (vuex) { 'use strict';
+  (global = global || self, global.VuexProxy = factory(global.Vuex));
+}(this, (function (Vuex) { 'use strict';
 
-  vuex = vuex && vuex.hasOwnProperty('default') ? vuex['default'] : vuex;
+  Vuex = Vuex && Vuex.hasOwnProperty('default') ? Vuex['default'] : Vuex;
 
   /**
   * 获取一个对象指定路径的值
@@ -27,14 +27,25 @@
   };
 
   const set = (obj, key, val) => {
-    if (typeof key === 'undefined') throw new Error('required set key')
-    let p = 0;
-    key = key.split ? key.split('.') : key;
-    const endKey = key.pop();
-    while (obj && p < key.length) obj = obj[key[p++]];
-    if (obj !== undefined && p >= key.length && obj[endKey]) {
-      return obj[endKey] = val
+    let p = key.split('.');
+    if (p.length === 1) {
+      return obj[key] = val
     }
+    let end = false;
+    return p.reduce((v, k, i) => {
+      if (end) {
+        return val
+      }
+      if (typeof v === 'object' && v) {
+        if (i === (p.length - 1)) {
+          v[k] = val;
+          end = true;
+          return val
+        } else {
+          return v[k]
+        }
+      }
+    }, obj)
   };
 
   class StoreProxy{
@@ -84,7 +95,7 @@
     if (data._vm && data._modules) {
       return data
     }
-    const store = new vuex.Store(data);
+    const store = new Vuex.Store(data);
     return store
   }
 
@@ -271,10 +282,12 @@
           
           res.push({
             key: key,
-            getter: () => {
+            getter(){
               return get(vm.$s, v)
             },
-            setter: (nextVal) => set(vm.$s, v, nextVal)
+            setter(nextVal){
+              return set(vm.$s, v, nextVal)
+            }
           });
           if (key == 'news') {
             console.log(vm.$s, v, key, get(vm.$s, v));
@@ -288,10 +301,36 @@
           break;
         case 'object':
           if (v && v.get) {
+            let getter;
+            let setter = null;
+            switch(typeof v.get) {
+              case 'string':
+                getter = function(){
+                  return get(vm.$s, v.get)
+                };
+                break;
+              case 'function':
+                getter = v.get.bind(vm, vm.$s);
+                break;
+              default:
+                getter = () => v.get;
+            }
+
+            switch (typeof v.set) {
+              case 'string':
+                setter = nextVal => set(vm.$s, v.set, nextVal);
+                break;
+              case 'function':
+                setter = function(nextVal) {
+                  return v.set.call(vm, nextVal, vm.$s)
+                };
+                break;
+            }
+
             res.push({
               key,
-              getter: v.get.bind(vm, vm.$s),
-              setter: v.set ? (nextVal) => v.set.call(vm, nextVal, vm.$s) : null,
+              getter: getter,
+              setter: setter,
             });
           }
           break;
@@ -380,7 +419,7 @@
   }
 
   var install = (Vue) => {
-    Vue.use(vuex);
+    Vue.use(Vuex);
     function beforeCreate() {
       const vm = this;
 

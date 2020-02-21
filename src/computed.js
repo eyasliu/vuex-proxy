@@ -52,10 +52,12 @@ function createComputed(vm, comp) {
         
         res.push({
           key: key,
-          getter: () => {
+          getter(){
             return get(vm.$s, v)
           },
-          setter: (nextVal) => set(vm.$s, v, nextVal)
+          setter(nextVal){
+            return set(vm.$s, v, nextVal)
+          }
         })
         if (key == 'news') {
           console.log(vm.$s, v, key, get(vm.$s, v))
@@ -69,10 +71,36 @@ function createComputed(vm, comp) {
         break;
       case 'object':
         if (v && v.get) {
+          let getter
+          let setter = null
+          switch(typeof v.get) {
+            case 'string':
+              getter = function(){
+                return get(vm.$s, v.get)
+              }
+              break;
+            case 'function':
+              getter = v.get.bind(vm, vm.$s)
+              break;
+            default:
+              getter = () => v.get
+          }
+
+          switch (typeof v.set) {
+            case 'string':
+              setter = nextVal => set(vm.$s, v.set, nextVal)
+              break;
+            case 'function':
+              setter = function(nextVal) {
+                return v.set.call(vm, nextVal, vm.$s)
+              }
+              break;
+          }
+
           res.push({
             key,
-            getter: v.get.bind(vm, vm.$s),
-            setter: v.set ? (nextVal) => v.set.call(vm, nextVal, vm.$s) : null,
+            getter: getter,
+            setter: setter,
           })
         }
         break;

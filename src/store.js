@@ -1,4 +1,4 @@
-import vuex from 'vuex'
+import Vuex from 'vuex'
 import { get } from './helper'
 
 class StoreProxy{
@@ -48,7 +48,7 @@ function createStore(data) {
   if (data._vm && data._modules) {
     return data
   }
-  const store = new vuex.Store(data)
+  const store = new Vuex.Store(data)
   return store
 }
 

@@ -1,10 +1,10 @@
-import vuex from 'vuex'
+import Vuex from 'vuex'
 import { injectStore } from './store'
 import { injectComputed } from './computed'
 import { injectMethods } from './methods'
 
 export default (Vue) => {
-  Vue.use(vuex)
+  Vue.use(Vuex)
   function beforeCreate() {
     const vm = this
 
