@@ -169,16 +169,27 @@ function createProxy(store) {
   return px
 }
 
+export function Store(data) {
+  if (data instanceof StoreProxy) {
+    return data
+  }
+
+  let vuexStore = createStore(data)
+  let proxyStore = createProxy(vuexStore)
+  return proxyStore
+}
+
 export function injectStore(vm) {
   const options = vm.$options
 
   if (options.store) {
-    options.store = createStore(options.store)
-    vm.$store = options.store
-    vm.$s = createProxy(vm.$store)
+    options.store = Store(options.store)
+    vm.$s = options.store
+    vm.$store = vm.$s.$store
   }
-  
+
   if (options.parent && options.parent.$s) {
     vm.$s = options.parent.$s
+    vm.$store = vm.$s.$store
   }
 }

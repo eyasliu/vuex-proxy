@@ -1,7 +1,11 @@
 import install from './install'
+import {Store} from './store'
 
 export default {
-  install
+  install,
+  Store
 }
 
-// export { computed, methods } from './api'
+export {
+  Store as Store
+}

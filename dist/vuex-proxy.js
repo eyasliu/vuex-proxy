@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('vuex')) :
-  typeof define === 'function' && define.amd ? define(['vuex'], factory) :
-  (global = global || self, global.VuexProxy = factory(global.Vuex));
-}(this, (function (Vuex) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('vuex')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'vuex'], factory) :
+  (global = global || self, factory(global.VuexProxy = {}, global.Vuex));
+}(this, (function (exports, Vuex) { 'use strict';
 
   Vuex = Vuex && Vuex.hasOwnProperty('default') ? Vuex['default'] : Vuex;
 
@@ -216,17 +216,28 @@
     return px
   }
 
+  function Store(data) {
+    if (data instanceof StoreProxy) {
+      return data
+    }
+
+    let vuexStore = createStore(data);
+    let proxyStore = createProxy(vuexStore);
+    return proxyStore
+  }
+
   function injectStore(vm) {
     const options = vm.$options;
 
     if (options.store) {
-      options.store = createStore(options.store);
-      vm.$store = options.store;
-      vm.$s = createProxy(vm.$store);
+      options.store = Store(options.store);
+      vm.$s = options.store;
+      vm.$store = vm.$s.$store;
     }
-    
+
     if (options.parent && options.parent.$s) {
       vm.$s = options.parent.$s;
+      vm.$store = vm.$s.$store;
     }
   }
 
@@ -436,11 +447,13 @@
   };
 
   var index = {
-    install
+    install,
+    Store
   };
 
-  // export { computed, methods } from './api'
+  exports.Store = Store;
+  exports.default = index;
 
-  return index;
+  Object.defineProperty(exports, '__esModule', { value: true });
 
 })));

@@ -1,6 +1,6 @@
 {
   "name": "vuex-proxy",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "author": "Eyasliu <liuyuesongde@163.com>",
   "license": "Apache-2.0",
   "main": "dist/vuex-proxy.js",
