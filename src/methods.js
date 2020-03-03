@@ -3,9 +3,10 @@ import { get } from './helper'
 export function injectMethods(vm) {
   if (vm.$options.$methods) {
     vm.$options.methods = createMethods(vm, vm.$options.$methods).reduce((m, {key, func}) => {
-      if (m[key]) {
-        throw new Error('methods has duplicate key [' + key + ']')
-      }
+      // it's fine, even duplicate
+      // if (m[key]) {
+      //   throw new Error('methods has duplicate key [' + key + ']')
+      // }
       m[key] = func
       return m
     }, vm.$options.methods || {})
