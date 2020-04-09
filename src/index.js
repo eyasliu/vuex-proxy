@@ -6,6 +6,4 @@ export default {
   Store
 }
 
-export {
-  Store as Store
-}
+export { Store }

@@ -1,52 +1,11 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('vuex')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'vuex'], factory) :
-  (global = global || self, factory(global.VuexProxy = {}, global.Vuex));
-}(this, (function (exports, Vuex) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('vuex'), require('vue')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'vuex', 'vue'], factory) :
+  (global = global || self, factory(global.VuexProxy = {}, global.Vuex, global.Vue));
+}(this, (function (exports, Vuex, Vue) { 'use strict';
 
   Vuex = Vuex && Vuex.hasOwnProperty('default') ? Vuex['default'] : Vuex;
-
-  /**
-  * 获取一个对象指定路径的值
-  * 
-  * @param {object} obj 需要获取的对象
-  * @param {string} key 对象的路径
-  * @param {any} def 如果指定路径没有值，返回的默认值
-  * 
-  * @example 
-  * ```
-  * get(window, 'location.host', 'default value')
-  * ```
-  */
-  const get = (obj, key, def, p) => {
-    if (typeof key === 'undefined') return def
-    p = 0;
-    key = key.split ? key.split('.') : key;
-    while (obj && p < key.length) obj = obj[key[p++]];
-    return (obj === undefined || p < key.length) ? def : obj;
-  };
-
-  const set = (obj, key, val) => {
-    let p = key.split('.');
-    if (p.length === 1) {
-      return obj[key] = val
-    }
-    let end = false;
-    return p.reduce((v, k, i) => {
-      if (end) {
-        return val
-      }
-      if (typeof v === 'object' && v) {
-        if (i === (p.length - 1)) {
-          v[k] = val;
-          end = true;
-          return val
-        } else {
-          return v[k]
-        }
-      }
-    }, obj)
-  };
+  Vue = Vue && Vue.hasOwnProperty('default') ? Vue['default'] : Vue;
 
   class StoreProxy{
     constructor(path, store, proxyRoot) {
@@ -66,6 +25,26 @@
           return s[k]
         }
       }, this.$store.state)
+    }
+    get $name() {
+      return this.$path.split('.').pop()
+    }
+    get $_watchVM() {
+      if (this.$root.$watchVM) {
+        return this.$root.$watchVM
+      }
+      
+      this.$root.$watchVM = new Vue({store: this.$root,
+        beforeCreate() {
+          injectStore(this);
+        },
+        watch: {
+          '$s.theme': function (n) {
+            console.log(n, this);
+          }
+        }
+      });
+      return this.$root.$watchVM
     }
     $registerModule(name, rawModule) {
       this.$store.registerModule(name, rawModule);
@@ -206,6 +185,40 @@
       });
     };
     proxyMutation(px, mod);
+
+    // watch
+    const addWatch = (modpx, parent) => {
+      Object.keys(parent.watch || (parent._rawModule && parent._rawModule.watch) || {}).forEach(key => {
+        console.log('add watch: $s.'+ key);
+        // 太早监听会没用，加个延时
+        setTimeout(() => {
+          modpx.$_watchVM.$watch((modpx.$path).replace('root', '$s') + '.' + key, (nv, ov) => {
+            let handler = parent._rawModule.watch[key];
+            if (typeof handler === 'function') {
+              handler.call(modpx, nv, ov);
+            } else if (typeof handler === 'string') {
+              handler = modpx[handler];
+              if (!handler) {
+                throw new Error('actions or mutations not found ' + handler)
+              }
+              if (typeof handler === 'function') {
+                handler.call(modpx, nv, ov);
+              } else {
+                throw new Error('watch handler must be function or action string name')
+              }
+            } else {
+              throw new Error('watch handler must be function or action string name')
+            }
+            
+          });
+        }, 0);
+      });
+      Object.keys(parent._rawModule && parent._rawModule.modules || {}).forEach(name => {
+        addWatch(modpx[name], parent._rawModule.modules[name]);
+      });
+    };
+    addWatch(px, mod);
+    
   }
 
   function createProxy(store) {
@@ -223,6 +236,7 @@
 
     let vuexStore = createStore(data);
     let proxyStore = createProxy(vuexStore);
+
     return proxyStore
   }
 
@@ -232,6 +246,7 @@
     if (options.store) {
       options.store = Store(options.store);
       vm.$s = options.store;
+      vm.$s.$watchVM = vm;
       vm.$store = vm.$s.$store;
     }
 
@@ -240,6 +255,48 @@
       vm.$store = vm.$s.$store;
     }
   }
+
+  /**
+  * 获取一个对象指定路径的值
+  * 
+  * @param {object} obj 需要获取的对象
+  * @param {string} key 对象的路径
+  * @param {any} def 如果指定路径没有值，返回的默认值
+  * 
+  * @example 
+  * ```
+  * get(window, 'location.host', 'default value')
+  * ```
+  */
+  const get = (obj, key, def, p) => {
+    if (typeof key === 'undefined') return def
+    p = 0;
+    key = key.split ? key.split('.') : key;
+    while (obj && p < key.length) obj = obj[key[p++]];
+    return (obj === undefined || p < key.length) ? def : obj;
+  };
+
+  const set = (obj, key, val) => {
+    let p = key.split('.');
+    if (p.length === 1) {
+      return obj[key] = val
+    }
+    let end = false;
+    return p.reduce((v, k, i) => {
+      if (end) {
+        return val
+      }
+      if (typeof v === 'object' && v) {
+        if (i === (p.length - 1)) {
+          v[k] = val;
+          end = true;
+          return val
+        } else {
+          return v[k]
+        }
+      }
+    }, obj)
+  };
 
   function injectComputed(vm) {
     if (vm.$options.$computed) {

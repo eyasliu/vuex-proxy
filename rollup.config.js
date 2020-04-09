@@ -14,6 +14,6 @@ export default {
     format: 'umd',
   }],
   // exports: 'named',
-  moduleName: 'VuexProxy',
-  external: ['Vuex']
+  // moduleName: 'VuexProxy',
+  external: ['vuex', 'vue']
 }

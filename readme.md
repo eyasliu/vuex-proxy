@@ -18,6 +18,32 @@ vue 的增强组件，基于 vuex，让 vuex 更简单
 
 在组件内使用 `this.$s` 访问
 
+#### store 定义
+
+store 的定义和vuex完全兼容，
+
+```js
+{
+  // 完全兼容 vuex 的 store 定义
+  namespaced: true,
+  state: {
+    list: [],
+    total: 0,
+  },
+  modules: {},
+  // 但是 actions 和 mutations 的作用变得平等，没有区别，并且this指向当前 vuex proxy store，详见下文
+  actions: {}, 
+  mutations: {},
+  
+  // 新增 api，在state发生变化的时候，触发函数 
+  watch: {
+    list(newValue, oldValue) {
+      console.log('list change:', oldValue, ' => ', newValue)
+    }
+  },
+}
+```
+
 #### `this.$s.$store`
 
 原始的 vuex store，没有任何侵入和 hack
@@ -51,10 +77,10 @@ fieldName 是指 state，getters，actions，mutation 里面的所有字段名�
 
 ```js
 import Vue from 'vue'
-import vuex-proxy from 'vuex-proxy'
+import vuexProxy from 'vuex-proxy'
 
 // 使用插件
-Vue.use(vuex-proxy)
+Vue.use(vuexProxy)
 
 new Vue({
   // 在根组件使用 store 属性定义 vuex-proxy store，vuexp store 的 api 和 vuex store 完全兼容，说明请看下文
@@ -66,6 +92,14 @@ new Vue({
     // store getters 计算属性，和 vuex state 完全一致，无任何变化
     getters: {
       numPlus: state => state + 1
+    },
+    // watch 与 vue 的 watch 相似，当 state 变化后触发，支持 state 和 getters 的监听
+
+    watch: {
+      num: 'consoleNum', // 值可以是字符串，表示 action 或 mutation 的函数名
+      numPlus(newV, oldV) { // 值可以是函数
+        console.log('num change:', oldV, ' => ', newV)
+      },
     },
     actions: {
       // 第一种 action 写法，和 vuex state 完全一致，无任何变化，在组件调用的时候，也没有区别，使用 this.$store.dispatch('reset')
@@ -92,6 +126,9 @@ new Vue({
         this.plus()
         // 也可以修改 state
         this.num = n
+      },
+      consoleNum() {
+        console.log(this.num)
       }
     },
     mutations: {

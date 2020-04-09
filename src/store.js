@@ -1,5 +1,5 @@
 import Vuex from 'vuex'
-import { get } from './helper'
+import Vue from 'vue'
 
 class StoreProxy{
   constructor(path, store, proxyRoot) {
@@ -19,6 +19,26 @@ class StoreProxy{
         return s[k]
       }
     }, this.$store.state)
+  }
+  get $name() {
+    return this.$path.split('.').pop()
+  }
+  get $_watchVM() {
+    if (this.$root.$watchVM) {
+      return this.$root.$watchVM
+    }
+    
+    this.$root.$watchVM = new Vue({store: this.$root,
+      beforeCreate() {
+        injectStore(this)
+      },
+      watch: {
+        '$s.theme': function (n) {
+          console.log(n, this)
+        }
+      }
+    })
+    return this.$root.$watchVM
   }
   $registerModule(name, rawModule) {
     this.$store.registerModule(name, rawModule)
@@ -159,6 +179,40 @@ function proxyModule(px, mod, store) {
     })
   }
   proxyMutation(px, mod)
+
+  // watch
+  const addWatch = (modpx, parent) => {
+    Object.keys(parent.watch || (parent._rawModule && parent._rawModule.watch) || {}).forEach(key => {
+      console.log('add watch: $s.'+ key)
+      // 太早监听会没用，加个延时
+      setTimeout(() => {
+        modpx.$_watchVM.$watch((modpx.$path).replace('root', '$s') + '.' + key, (nv, ov) => {
+          let handler = parent._rawModule.watch[key]
+          if (typeof handler === 'function') {
+            handler.call(modpx, nv, ov)
+          } else if (typeof handler === 'string') {
+            handler = modpx[handler]
+            if (!handler) {
+              throw new Error('actions or mutations not found ' + handler)
+            }
+            if (typeof handler === 'function') {
+              handler.call(modpx, nv, ov)
+            } else {
+              throw new Error('watch handler must be function or action string name')
+            }
+          } else {
+            throw new Error('watch handler must be function or action string name')
+          }
+          
+        })
+      }, 0);
+    })
+    Object.keys(parent._rawModule && parent._rawModule.modules || {}).forEach(name => {
+      addWatch(modpx[name], parent._rawModule.modules[name])
+    })
+  }
+  addWatch(px, mod)
+  
 }
 
 function createProxy(store) {
@@ -176,6 +230,7 @@ export function Store(data) {
 
   let vuexStore = createStore(data)
   let proxyStore = createProxy(vuexStore)
+
   return proxyStore
 }
 
@@ -185,6 +240,7 @@ export function injectStore(vm) {
   if (options.store) {
     options.store = Store(options.store)
     vm.$s = options.store
+    vm.$s.$watchVM = vm
     vm.$store = vm.$s.$store
   }
 
