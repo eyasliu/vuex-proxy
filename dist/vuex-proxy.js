@@ -34,16 +34,7 @@
         return this.$root.$watchVM
       }
       
-      this.$root.$watchVM = new Vue({store: this.$root,
-        beforeCreate() {
-          injectStore(this);
-        },
-        watch: {
-          '$s.theme': function (n) {
-            console.log(n, this);
-          }
-        }
-      });
+      this.$root.$watchVM = new Vue({store: this.$root});
       return this.$root.$watchVM
     }
     $registerModule(name, rawModule) {
@@ -189,7 +180,6 @@
     // watch
     const addWatch = (modpx, parent) => {
       Object.keys(parent.watch || (parent._rawModule && parent._rawModule.watch) || {}).forEach(key => {
-        console.log('add watch: $s.'+ key);
         // 太早监听会没用，加个延时
         setTimeout(() => {
           modpx.$_watchVM.$watch((modpx.$path).replace('root', '$s') + '.' + key, (nv, ov) => {
@@ -211,7 +201,7 @@
             }
             
           });
-        }, 0);
+        }, 1);
       });
       Object.keys(parent._rawModule && parent._rawModule.modules || {}).forEach(name => {
         addWatch(modpx[name], parent._rawModule.modules[name]);
