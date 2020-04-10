@@ -23,7 +23,7 @@ class StoreProxy{
   get $name() {
     return this.$path.split('.').pop()
   }
-  get $_watchVM() {
+  get $rootVM() {
     if (this.$root.$watchVM) {
       return this.$root.$watchVM
     }
@@ -185,7 +185,7 @@ function proxyModule(px, mod, store) {
     Object.keys(parent.watch || (parent._rawModule && parent._rawModule.watch) || {}).forEach(key => {
       // 太早监听会没用，加个延时
       setTimeout(() => {
-        modpx.$_watchVM.$watch((modpx.$path).replace('root', '$s') + '.' + key, (nv, ov) => {
+        modpx.$rootVM.$watch((modpx.$path).replace('root', '$s') + '.' + key, (nv, ov) => {
           let handler = parent._rawModule.watch[key]
           if (typeof handler === 'function') {
             handler.call(modpx, nv, ov)

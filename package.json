@@ -1,9 +1,9 @@
 {
   "name": "vuex-proxy",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "author": "Eyasliu <liuyuesongde@163.com>",
   "license": "Apache-2.0",
-  "main": "src/index.js",
+  "main": "dist/vuex-proxy.js",
   "scripts": {
     "compile": "rm -rf lib",
     "build": "npm run compile && rm -rf dist && rollup -c",

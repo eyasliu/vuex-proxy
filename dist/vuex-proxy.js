@@ -1,11 +1,12 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('vuex'), require('vue')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'vuex', 'vue'], factory) :
-  (global = global || self, factory(global.VuexProxy = {}, global.Vuex, global.Vue));
-}(this, (function (exports, Vuex, Vue) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('vuex')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'vuex'], factory) :
+  (global = global || self, factory(global.VuexProxy = {}, global.Vuex));
+}(this, (function (exports, Vuex) { 'use strict';
 
   Vuex = Vuex && Vuex.hasOwnProperty('default') ? Vuex['default'] : Vuex;
-  Vue = Vue && Vue.hasOwnProperty('default') ? Vue['default'] : Vue;
+
+  // import Vue from 'vue'
 
   class StoreProxy{
     constructor(path, store, proxyRoot) {
@@ -29,13 +30,22 @@
     get $name() {
       return this.$path.split('.').pop()
     }
-    get $_watchVM() {
+    get $rootVM() {
       if (this.$root.$watchVM) {
         return this.$root.$watchVM
       }
-      
-      this.$root.$watchVM = new Vue({store: this.$root});
-      return this.$root.$watchVM
+      // 下面这个还不行
+      // this.$root.$watchVM = new Vue({
+      //   store: this.$root, 
+      //   beforeCreate() {
+      //     injectStore(this)
+      //   },
+      //   render(){
+      //     return null
+      //   },
+      // }).$mount()
+      // return this.$root.$watchVM
+      return null
     }
     $registerModule(name, rawModule) {
       this.$store.registerModule(name, rawModule);
@@ -182,7 +192,7 @@
       Object.keys(parent.watch || (parent._rawModule && parent._rawModule.watch) || {}).forEach(key => {
         // 太早监听会没用，加个延时
         setTimeout(() => {
-          modpx.$_watchVM.$watch((modpx.$path).replace('root', '$s') + '.' + key, (nv, ov) => {
+          modpx.$rootVM.$watch((modpx.$path).replace('root', '$s') + '.' + key, (nv, ov) => {
             let handler = parent._rawModule.watch[key];
             if (typeof handler === 'function') {
               handler.call(modpx, nv, ov);
