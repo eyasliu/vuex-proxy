@@ -27,9 +27,18 @@ class StoreProxy{
     if (this.$root.$watchVM) {
       return this.$root.$watchVM
     }
-    
-    this.$root.$watchVM = new Vue({store: this.$root})
-    return this.$root.$watchVM
+    // 下面这个还不行
+    // this.$root.$watchVM = new Vue({
+    //   store: this.$root, 
+    //   beforeCreate() {
+    //     injectStore(this)
+    //   },
+    //   render(){
+    //     return null
+    //   },
+    // }).$mount()
+    // return this.$root.$watchVM
+    return null
   }
   $registerModule(name, rawModule) {
     this.$store.registerModule(name, rawModule)
@@ -230,7 +239,7 @@ export function injectStore(vm) {
   if (options.store) {
     options.store = Store(options.store)
     vm.$s = options.store
-    vm.$s.$watchVM = vm
+    // vm.$s.$watchVM = vm
     vm.$store = vm.$s.$store
   }
 
