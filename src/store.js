@@ -1,5 +1,5 @@
 import Vuex from 'vuex'
-import Vue from 'vue'
+// import Vue from 'vue'
 
 class StoreProxy{
   constructor(path, store, proxyRoot) {
