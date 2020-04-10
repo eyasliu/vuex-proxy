@@ -239,7 +239,7 @@ export function injectStore(vm) {
   if (options.store) {
     options.store = Store(options.store)
     vm.$s = options.store
-    // vm.$s.$watchVM = vm
+    vm.$s.$watchVM = vm
     vm.$store = vm.$s.$store
   }
 
