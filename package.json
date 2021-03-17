@@ -1,13 +1,15 @@
 {
   "name": "vuex-proxy",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "author": "Eyasliu <liuyuesongde@163.com>",
   "license": "Apache-2.0",
   "main": "dist/vuex-proxy.js",
   "scripts": {
-    "compile": "rm -rf lib",
-    "build": "npm run compile && rm -rf dist && rollup -c",
-    "test": "jest --config=jest.json"
+    "dev": "rollup -w",
+    "build": "rollup -c",
+    "test": "jest",
+    "coverage": "jest --coverage",
+    "publish": "rollup -c && npm publish"
   },
   "repository": {
     "type": "git",
@@ -16,35 +18,31 @@
   "keywords": [
     "vue",
     "vuex",
-    "vuex plus",
-    "vue plus"
+    "vuex proxy",
+    "vuex plus"
   ],
   "bugs": {
     "url": "https://github.com/eyasliu/vuex-proxy/issues"
   },
   "homepage": "https://github.com/eyasliu/vuex-proxy#readme",
-  "files": [
-    "src/",
-    "dist/"
-  ],
-  "devDependencies": {
-    "@babel/core": "^7.8.0",
-    "@babel/plugin-proposal-class-properties": "^7.8.0",
-    "@babel/plugin-proposal-decorators": "^7.8.0",
-    "@babel/plugin-transform-runtime": "^7.8.0",
-    "@babel/preset-env": "^7.8.2",
-    "@babel/runtime": "^7.8.0",
-    "babel-jest": "24",
-    "jest": "24",
-    "mobx": "^5.15.2",
-    "rollup": "^1.29.0",
-    "rollup-plugin-babel-minify": "^9.1.1",
-    "vue": "^2.6.11"
-  },
   "peerDependencies": {
     "vue": "^2.6.11"
   },
   "dependencies": {
-    "vuex": "^3.1.0"
+    "vuex": "^3.6.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.13.10",
+    "@babel/preset-env": "^7.13.10",
+    "@rollup/plugin-buble": "^0.21.3",
+    "@rollup/plugin-commonjs": "^17.1.0",
+    "@rollup/plugin-node-resolve": "^11.2.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.22.0",
+    "eslint-plugin-vue": "^7.7.0",
+    "jest": "^26.6.3",
+    "rollup": "^2.41.2",
+    "rollup-plugin-babel-minify": "^10.0.0",
+    "vue": "^2.6.12"
   }
 }

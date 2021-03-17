@@ -1,237 +1,185 @@
 # Vuex Proxy
 
-that mean Vuex Proxy
+Vuex 增强版，简化 vuex，让 vuex 更简单
 
-vue 的增强组件，基于 vuex，让 vuex 更简单
+## 使用方法
 
-# 使用方法
+1. 安装
 
-首先，vuex 那整套完全兼容，所以可以从 vuex 无缝迁移到 vuex-p，但是反之不行，因为 vuex-proxy 在 vuex 的api上有扩展
-
-### API
-
-在 vue 组件实例中，增加了一个 `$s` 属性，这是 `vuex-proxy store`，事实上这是一个 `vuex store` 的代理，目的就是为了简化 `vuex` 使用，当然，原本 vuex 注入的 `$store` 依然有效
-
-> 注意在定义 store 的 state，actions，getters，mutation 时，不要和这些 api 名字重复了
-
-**vuex-proxy store** 格式
-
-在组件内使用 `this.$s` 访问
-
-#### store 定义
-
-store 的定义和vuex完全兼容，
-
-```js
-{
-  // 完全兼容 vuex 的 store 定义
-  namespaced: true,
-  state: {
-    list: [],
-    total: 0,
-  },
-  modules: {},
-  // 但是 actions 和 mutations 的作用变得平等，没有区别，并且this指向当前 vuex proxy store，详见下文
-  actions: {}, 
-  mutations: {},
-  
-  // 新增 api，在state发生变化的时候，触发函数 
-  watch: {
-    list(newValue, oldValue) {
-      console.log('list change:', oldValue, ' => ', newValue)
-    }
-  },
-}
+```sh
+yarn add vuex-proxy
 ```
 
-#### `this.$s.$store`
+2. 如果针对已存在的项目，则按照如下改动
 
-原始的 vuex store，没有任何侵入和 hack
+```diff
+- import ... from 'vuex'
++ import ... from 'vuex-proxy'
+```
 
-#### `this.$s.$rootVM`
+完成。当然了，有一些 Break Change，因为设计原因，有一些和 vuex 不一样的地方，如果你没有涉及到以下几点，则无缝迁移
 
-挂载 store 最顶层的组件实例
+1.  state, getters, actions, mutations 的字段名不能重复
+2.  没有 2
 
-#### `this.$s.$root`
+## API
 
-最顶层 vuex-proxy store 对象
+首先， vuex 那套可以继续用，工具函数和各种操作都兼容，说明一下和 vuex 不一样的地方
 
-#### `this.$s.$registerModule`
-
-动态注册新模块，参数和功能与 vuex 的 registerModule 基本一致
-
-#### `this.$s.$unregisterModule`
-
-动态删除模块，参数和功能与 vuex 的 unregisterModule 基本一致
-
-#### `this.$s.$state`
-
-该模块级别的 vuex store 状态数据
-
-#### `this.$s[moduleName]`
-
-模块级别的 vuex-proxy store，api 和根 vuex-proxy store 无区别，只是状态数据不一样
-
-#### `this.$s[fieldName]`
-
-fieldName 是指 state，getters，actions，mutation 里面的所有字段名，vuex-p 把所有的状态、计算属性、方法都放到了同一层级里面，当你访问 vuex-proxy 的数据时，内部是知道你访问的是 state，还是getters，，还是 actions ，是一个 module，所以这也要求 state，getters，actions，mutation 里面的字段不能有重复，如果有重复则在初始化的时候会报错误
-
-
-### 示例
+#### store
 
 ```js
 import Vue from 'vue'
-import vuexProxy from 'vuex-proxy'
+import VuexProxy from 'vuex-proxy'
+Vue.use(VuexProxuy)
 
-// 使用插件
-Vue.use(vuexProxy)
-
-new Vue({
-  // 在根组件使用 store 属性定义 vuex-proxy store，vuexp store 的 api 和 vuex store 完全兼容，说明请看下文
-  store: {
-    // store state 状态数据，和 vuex state 完全一致，无任何变化
-    state: {
-      num: 0,
-    },
-    // store getters 计算属性，和 vuex state 完全一致，无任何变化
-    getters: {
-      numPlus: state => state + 1
-    },
-    // watch 与 vue 的 watch 相似，当 state 变化后触发，支持 state 和 getters 的监听
-
-    watch: {
-      num: 'consoleNum', // 值可以是字符串，表示 action 或 mutation 的函数名
-      numPlus(newV, oldV) { // 值可以是函数
-        console.log('num change:', oldV, ' => ', newV)
-      },
-    },
-    actions: {
-      // 第一种 action 写法，和 vuex state 完全一致，无任何变化，在组件调用的时候，也没有区别，使用 this.$store.dispatch('reset')
-      // 注意：该写法
-      // this 指向 vuex store
-      // 第一个参数是 vuex 的固定格式 { dispatch, commit, getters, state, rootGetters, rootState }
-      // 第二个参数是 action 参数
-      // 只有两个参数，不支持更多参数
-      reset({commit}) {
-        commit('RESET_NUM')
-      }，
-      // 第二种 action 写法，增强版本，在组件调用的时候，使用 this.$s.plus()
-      // this 指向 vuex-proxy store
-      // 参数无限个数，可在里面直接更改 state，把它当做 vuex mutation 来用，支持异步，注意异步函数里的 this 是指向的 vuex-proxy store就没问题了
-      plus() {
-        return ++this.num
-      },
-      setNum(n) {
-        // 在action 函数内部，可以访问 state
-        console.log(this.num)
-        // 也可以访问 getters 计算属性
-        console.log(this.numPlus)
-        // 也可以调用其他 action 和 mutation
-        this.plus()
-        // 也可以修改 state
-        this.num = n
-      },
-      consoleNum() {
-        console.log(this.num)
-      }
-    },
-    mutations: {
-      // 第一种 mutations 写法，和 vuex state 完全一致
-      RESET_NUM(state) {
-        state.num = 0
-      }
-      // 第二种 mutations 写法，和第二种 action 写法没有区别，用法也没有区别
-      resetNum() {
-        this.num = 0
-      }
-    },
-    // 嵌套模块，支持无限嵌套
-    modules: {
-      testMod: {
-        state: {
-          test: 100
-        },
-        getters: {},
-        actions: {},
-      }
-    }
+const store = new VuexProxy.Store{
+  // 和 vuex 一样
+  state: {
+    num: 15,
+    wnum: [0, 0],
+    wpnum: [0, 0],
   },
-  data() { return { name: 'my name is vue plus' } }
-
-  // 映射到计算属性中，用 $computed，完全兼容原本 vue 组件的 computed 功能
-  // 使用字符串数组形式，直接写key，多层级直接使用 . 或者 / 分隔，最终映射的key名字是最后一层的key，并且自动绑定了 get 和 set，也就是可以直接给绑定的对象赋值
-  $computed: ['num', 'numPlus', 'testMod.test'],
-  mounted() {
-    this.num = 2 // 相当于 this.$s.num = 2
-    this.test = 20 // 相当于 this.$s.testMod.test = 20
+  // 和 vuex 一样
+  getters: {
+    numPlus: (state) => state.num + 1,
   },
 
-  // 使用对象形式
-  // this 指向组件实例
-  $computed: {
-    num: 'num', // 会自动绑定 get 和 set
-    xnum: {
-      get($s) { return $s.num } // get 函数只有一个参数，该参数为 vuex-proxy store 实例，也就是 this.$s
-      set(n, $s) { return $s.num = n } // set 函数有两个参数，第一个是修改后的值，第二个是 this.$s
-    },
-    numPlus() { // 这算是 get 函数
-      return this.$s.num
-    },
-    myname() {
-      // 还可以访问组件内部 data
-      return this.name
-    },
-  },
-
-  // 绑定 actions 和 mutations 到组件实例中
-  // 字符串数组形式，根据key名字自动映射，映射后函数的this指向为函数所在的层级的 vuex-proxy store 实例
-  $methods: ['plus', 'setNum'],
-  $methods: {
-    plus: 'plus',
-    setNum(n) {
-      return this.$s.setNum(n)
-    },
-    sayMyName() {
-      console.log(this.myname)
-    }
-  },
+  // 新增 watch，在 state, getters 发生变化时，触发函数，使用方法和 vue 组件的 watch 一样
   watch: {
-    // 这样监听值改变，api 无变化
-    '$s.num': function(oldv, newv) {
-      console.log(this.newv)
-    }
-  }
-})
+    num(newV, oldV) {
+      this.wnum = [newV, oldV];
+    },
+    numPlus(newV, oldV) {
+      this.wpnum = [newV, oldV];
+    },
+  },
+  // 和 vuex 有区别
+  actions: {
+    // 参数随便，this 指向了当前模块 VuexProxy 实例，actions的调用也不一样，后面涉及
+    reset() {
+      // 在 actions 中修改状态，放心，大胆的改吧
+      this.num = 0;
+    },
+    plus() {
+      this.num++;
+    },
+    setNum(n) {
+      this.num = n;
+    },
+  },
+  // 当模块初始化完成后触发
+  register() {
+    this.$root.testMod.triggerRegister = true;
+  },
+  // 当模块动态卸载是触发
+  unregister() {
+    this.$root.testMod.triggerUnregister = true;
+  },
+
+  // 可以看到，没有 mutations 了
+}
+
+store.num // 5
+store.numPlus // 6
+store.reset() // 直接调用
+store.setNum(10) // 直接传参，参数个数无限制
+store.$store // 原始的 vuex Store，没有任何入侵
+store.$store.dispatch('plus') // 当然，如果你喜欢用dispatch 和 commit，也一样兼容，在 store 定义的时候参数记得和 vuex store 一样
 
 ```
 
-## 对比
+store 的定义有些区别
 
-### 与 Vuex 对比，api 变化
+1.  actions 和 mutations 没有区别了
+2.  actions 和 mutations 的触发直接调用，没有 dispatch，没有 commit，如果非要用 dispatch 和 commit，使用 store.$store
 
-目的：不破坏 vuex 前提下，让 vuex 变得更简单，更强大
+#### Vue Component
 
-#### 兼容性
+在 Vue 组件中使用时
 
-Vuex 的原有功能一切正常，可以无缝的将 vuex 迁移到 vuex-proxy
+```js
+// 实例化Vue应用
 
-#### 为什么要改变 vuex
+const app = new Vue({ store });
 
-vuex 是 vue 官方指定并维护的状态管理插件，和 vue 的结合无疑非常好的，但是在我看来在使用vuex的时候，有一些让我不舒服的地方
+const component = Vue.extend({
+  // 注意这个 $s，为注入组件标识
+  // 支持数组，对象，数组嵌入对象，对象嵌入数组
+  // 注入的时候，内部知道哪些该注入到 computed，哪些该注入到 methods，不需要你关心
+  $s: [
+    {
+      // num 是 state，所以最终会被注入到 computed，可以定义 get 和 set
+      num: {
+        get: 'num',
+        set: 'num',
+      },
+      num2: {
+        get() {
+          return this.$s.num;
+        },
+        set(v) {
+          this.$s.num = v;
+        },
+      },
+      // numPlus 是 getters，所以最终会被注入到 computed，可以定义 get 和 set
+      numPlus: {
+        get() {
+          return this.$s.numPlus;
+        },
+      },
+      numPlus2: {
+        get: 'numPlus', // 如果是 字符串，则规则和 vuex 的 mapState, mapAction, mapMutation 等等那种工具函数差不多
+        set(v) {
+          this.$s.num = v - 1;
+        },
+      },
+    },
+    'reset', //
+    'plus',
+    {
+      plus2: 'plus', // 别名，把 store.plus 绑定到 组件的 this.plus2() 中
+      reset2: 'reset',
+    },
+    { z: 'testmod.z' }, // 字符串使用 . 或者 / 表示路径
+    { testmod: ['x', { y: 'y', z: { a: { b: 'b' } } }] },
+    { n: 'testmod.y/z/a.b' }, // 你也可以 . 和 / 混用，效果没有区别
+  ],
+  mounted() {
+    this.num; // 5
+    this.num = 14;
+    this.numPlus; // 15
+    this.numPlus = 20;
+    this.reset();
+    this.setNum(30);
+    this.z; // { a: { b: 'b' } }
+    this.n; // b
 
- 1. actions 和 mutations 的参数，只能有一个，我理解初衷其实是为了只有一个 payload，更好记录，调试，跟踪变更等等，但是却不好用
- 2. mutations 的存在，我觉得就是多余的，明明可以直接改状态，为什么还要多包装一层呢。我觉得有几个原因：
-  2.1 方便调试工具的 Time Revel，redo，undo，变化跟踪等等。但是相信我，这些功能你基本不会用得上的，调试工具最大的作用就是用来看当前状态数据。
-  2.2 隔离 actions 的副作用，让状态变更更好跟踪和调试。但是实际上用的时候，我基本上不会去调试 mutation 函数
- 3. 在组件调用的时候，必须要用 dispatch 或 commit 去调用，为什么呢，直接调用不是更好吗
+    this.$s.num; // this.$s 就是 store 实例
+    this.$store; // 原始 vuex Store 实例
+    this.$s.$store; // 等价与 this.$store
+  },
+});
+```
 
-#### 变化点
+## Vuex Proxy 对于 Vuex
 
- 1. 初始化时，new vues.Store 是可选的，可以 new vuex.Store 再传入，也可以直接传入，内部自动识别
- 2. actions 和 mutations 兼容原有的，并且支持不同写法
- 3. state，getters，modules 没有变更
- 4. vue开发工具依然可用，不过每次更改状态都会有一个名为 `VUEXP_CHANGE_STATE` 的 type
- 5. vuex 生态的插件都可以继续使用
- 6. 新增 watch api，监听 state 和 getters 变化，和 vue 组件的 watch 功能类似
+1.  兼容 Vuex，Vuex Proxy 通过了 Vuex 的大部分单元测试，但是因为 Vuex Proxy 的 state, getters, actions, mutations 的字段名不能重复，所以有些测试用例是无法通过的。所以 Vuex Proxy 基本兼容 vuex 的大部分操作
+2.  增加了 register, unregister 初始化与卸载的钩子
+3.  增加了 watch ，使用方法和 vue 组件的 watch 一致
+4.  actions 的定义和调用优化，但是兼容 vuex
+5.  actions 中直接修改状态，并且是响应式的，包括 组件的 watch，render，和 store 的 watch 都会响应
+6.  vue 组件新增 $s, 用于直接访问和操作 Vuex Proxy Store
 
-简单地说，就是原有的 vuex 的功能都没有阉割，没有改变，只是增加了其他用法，使其变得使用更简单
+#### 为什么要这样做
+
+1.  我觉得 mutations 是多余的
+2.  vuex 可以变得更简单
+3.  vuex 可以变得更强大
+4.  dispatch 和 commit 不好用
+5.  开发效率更高了
+
+#### 使用它有什么代价
+
+1.  中大型的代码维护会变得很糟糕，没错，中大型项目建议不要用
+2.  性能没有 vuex 好，这是可预见的，vuex Proxy 底层都是调用的 vuex 的 api

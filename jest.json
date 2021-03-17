@@ -1,9 +1,0 @@
-{
-  "transform": {
-    ".js": "babel-jest"
-  },
-  "testRegex": "/test/spec/.*$",
-  "moduleFileExtensions": ["js", "json"],
-  "collectCoverage": true,
-  "collectCoverageFrom": ["src/**/*.js"]
-}
